@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: railcue
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ["5432:5432"]
+    volumes: [railcue-db:/var/lib/postgresql/data]
+  api:
+    build: .
+    depends_on: [db]
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/railcue
+      PORT: 8080
+      CORS_ORIGIN: http://localhost:8000
+    ports: ["8080:8080"]
+volumes:
+  railcue-db:
