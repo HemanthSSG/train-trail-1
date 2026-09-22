@@ -1,0 +1,2 @@
+-- Optional development seed. No fabricated train positions or gate states are inserted.
+-- Production railway infrastructure should be imported from a verified source and marked verified=true only after validation.
