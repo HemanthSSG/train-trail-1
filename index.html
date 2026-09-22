@@ -882,5 +882,11 @@ html, body {
 <div style="margin-top:22px;padding-top:14px;border-top:1px solid #f1f5f9;font-size:12px;font-weight:800;letter-spacing:.08em;color:#334155;">© ALL RIGHTS ARE RESERVED BY RAILCUE TEAM</div>
 </footer>
 </footer>
+<script>
+window.RAILCUE_API_BASE=window.RAILCUE_API_BASE||"http://localhost:8080";
+async function railcueApi(path,options={}){const r=await fetch(window.RAILCUE_API_BASE+path,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error?.message||"Backend request failed");return d;}
+async function refreshRailcueJourneyBackend(){if(!window.userPosition||!window.destination)return;try{const p={start:{latitude:userPosition[1],longitude:userPosition[0]},destination:{latitude:destination[1],longitude:destination[0]}};const d=(await railcueApi("/api/journey/overview",{method:"POST",body:JSON.stringify(p)})).data||{};const x=d.crossings||[],s=d.stations||[];const a=document.getElementById("journeyGate1Text"),b=document.getElementById("journeyGate2Text"),c=document.getElementById("journeyStationText");if(a)a.textContent=x[0]?(x[0].name||"Railway Gate")+" · "+(Number(x[0].distance||0)/1000).toFixed(2)+" km · mapped":"No verified crossing found";if(b)b.textContent=x[1]?(x[1].name||"Railway Gate")+" · "+(Number(x[1].distance||0)/1000).toFixed(2)+" km · mapped":"No second verified crossing found";if(c)c.textContent=s[0]?s[0].name+" · mapped railway station":"No verified station found";}catch(e){console.warn("RAILCUE backend unavailable:",e.message);}}
+window.addEventListener("load",()=>setTimeout(refreshRailcueJourneyBackend,500));
+</script>
 </body>
 </html>
