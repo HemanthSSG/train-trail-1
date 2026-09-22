@@ -18,7 +18,7 @@ export function prakasamHealth(){
 }
 export function prakasamLiveTrains(){
   const d=getDb(); if(!d) return {live:false,trains:[],source:null,status:"unavailable"};
-  const rows=d.prepare(`select l.train_number,l.lat,l.lng,l.speed,l.heading,l.current_status,l.last_station_code,l.next_station_code,l.delay_minutes,l.data_source,l.last_updated_at
+  const rows=d.prepare(`select l.train_number,l.lat,l.lng,l.speed,l.heading,l.current_status,l.last_station_code,l.next_station_code,l.delay_minutes,l.data_source,l.last_updated_at,l.live_track_km
     from live_train_states l order by l.last_updated_at desc`).all();
   return {live:false,simulation:true,district:"Prakasam",source:"TEMPORARY_TRIAL_DATABASE",last_updated:new Date().toISOString(),trains:rows};
 }
@@ -34,7 +34,7 @@ export function prakasamGate(gateCode){
   const d=getDb(); if(!d) return null;
   const gate=d.prepare("select * from railway_gates where gate_code=?").get(gateCode);
   if(!gate) return null;
-  const trains=d.prepare(`select t.* from trains t join railway_gate_trains m on m.train_number=t.number where m.gate_code=?`).all(gateCode);
-  const events=d.prepare("select * from gate_events where gate_code=? order by id desc").all(gateCode);
+  const trains=d.prepare(`select t.* from trains t join railway_gate_trains m on m.train_id=t.id where m.gate_id=? order by m.route_sequence`).all(gate.id);
+  const events=d.prepare("select * from gate_events where gate_id=? order by id desc").all(gate.id);
   return {gate,trains,events,source:"TEMPORARY_TRIAL_DATABASE",simulation:true};
 }
