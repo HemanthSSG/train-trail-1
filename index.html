@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAILCUE — Real-Time MapTiler Tracker</title>
+
+  <link href="https://cdn.maptiler.com/maptiler-sdk-js/v4.1.0/maptiler-sdk.css" rel="stylesheet" />
+  <script src="https://cdn.maptiler.com/maptiler-sdk-js/v4.1.0/maptiler-sdk.umd.min.js"></script>
+
+  
+<style>
+:root{--navy:#071a2b;--navy2:#0d2740;--red:#d71920;--ink:#102033;--muted:#64748b;--bg:#f5f7fa;--card:#fff;--line:#e2e8f0;--green:#16a34a;--amber:#d97706;--shadow:0 18px 50px rgba(7,26,43,.10)}
+*{box-sizing:border-box}html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5}.hidden{display:none!important}
+a{color:inherit;text-decoration:none}.container{width:min(1180px,calc(100% - 36px));margin:auto}.nav{position:sticky;top:0;z-index:200;background:rgba(7,26,43,.96);backdrop-filter:blur(14px);color:#fff;border-bottom:1px solid rgba(255,255,255,.08)}.nav-inner{height:70px;display:flex;align-items:center;gap:28px}.brand{font-weight:800;white-space:nowrap;letter-spacing:-.3px}.brand span{color:#ff5a5f}.navlinks{display:flex;gap:22px;font-size:14px;color:#dbe5ef;flex:1}.navlinks a:hover{color:#fff}.nav-actions{display:flex;gap:8px}.btn{border:1px solid transparent;border-radius:12px;padding:11px 16px;font-weight:700;cursor:pointer;transition:.18s}.btn-primary{background:var(--red);color:#fff}.btn-dark{background:var(--navy);color:#fff}.btn-light{background:#fff;color:var(--navy);border-color:var(--line)}.btn:hover{transform:translateY(-1px)}
+.hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#071a2b,#0d2740 62%,#123652);color:#fff;padding:82px 0 70px}.hero:before{content:"";position:absolute;inset:-120px;opacity:.16;background-image:linear-gradient(rgba(157,180,200,.45) 1px,transparent 1px),linear-gradient(90deg,rgba(157,180,200,.45) 1px,transparent 1px);background-size:56px 56px;transform:perspective(700px) rotateX(58deg) scale(1.5);transform-origin:center bottom;animation:livingGrid 12s linear infinite;pointer-events:none}.hero:after{content:"";position:absolute;inset:0;opacity:.10;background-image:linear-gradient(25deg,transparent 48%,#9db4c8 49%,transparent 50%),linear-gradient(145deg,transparent 48%,#9db4c8 49%,transparent 50%);background-size:180px 120px;animation:breathingLines 5s ease-in-out infinite;pointer-events:none}@keyframes livingGrid{0%{background-position:0 0;opacity:.10}50%{background-position:28px 28px;opacity:.20}100%{background-position:56px 56px;opacity:.10}}@keyframes breathingLines{0%,100%{opacity:.06;transform:scale(1)}50%{opacity:.16;transform:scale(1.025)}}.hero-content{position:relative;z-index:1;max-width:850px}.eyebrow{display:inline-flex;padding:7px 11px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.07);font-size:13px}.hero h1{font-size:clamp(42px,7vw,76px);line-height:1.02;letter-spacing:-3px;margin:18px 0 18px}.hero p{font-size:19px;color:#d5e0ea;max-width:720px}.searchbar{margin-top:30px;background:#fff;border-radius:18px;padding:8px;display:flex;gap:8px;box-shadow:0 20px 60px rgba(0,0,0,.25)}.searchbar input{flex:1;border:0;outline:0;padding:15px;font-size:16px}.searchchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.chip{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.1);font-size:12px;color:#e7eef5}
+section{padding:72px 0}.section-head{display:flex;justify-content:space-between;gap:30px;align-items:end;margin-bottom:26px}.section-head h2{margin:0;font-size:32px;letter-spacing:-1px}.section-head p{margin:5px 0 0;color:var(--muted);max-width:700px}.grid{display:grid;gap:18px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow)}.card h3{margin:0 0 8px}.muted{color:var(--muted)}
+.planner{margin-top:-35px;position:relative;z-index:5}.planner-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:26px;box-shadow:0 24px 70px rgba(7,26,43,.14)}.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field label{display:block;font-weight:750;font-size:13px;margin-bottom:7px}.field input,.select{width:100%;padding:13px 14px;border:1px solid #cbd5e1;border-radius:12px;font-size:15px;outline:0}.field input:focus{border-color:#335c7d;box-shadow:0 0 0 3px rgba(51,92,125,.1)}.planner-actions{display:flex;gap:10px;align-items:center;margin-top:15px;flex-wrap:wrap}.normal-option{display:flex;align-items:center;gap:8px;font-size:14px;color:#475569}.normal-option input{width:17px;height:17px}
+.map-shell{height:620px;border-radius:22px;overflow:hidden;border:1px solid var(--line);position:relative;background:#dce6ee;box-shadow:var(--shadow)}#map{position:absolute;inset:0}.map-ui{position:absolute;z-index:10;top:16px;left:16px;width:min(390px,calc(100% - 32px));background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-radius:16px;padding:14px;box-shadow:0 12px 35px rgba(0,0,0,.16)}.map-ui .row{display:flex;gap:8px;margin:8px 0}.map-ui input{flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:10px;padding:11px}.status{margin-top:10px;padding:10px;border-radius:10px;background:#f1f5f9;font-size:13px}.map-note{position:absolute;z-index:9;right:16px;bottom:16px;background:rgba(255,255,255,.94);padding:9px 12px;border-radius:10px;font-size:12px;color:#475569}
+.timeline{display:grid;gap:0}.timeline-item{display:grid;grid-template-columns:45px 1fr;gap:14px;position:relative;padding:9px 0 18px}.timeline-item:before{content:"";position:absolute;left:21px;top:42px;bottom:-1px;width:2px;background:#dbe3ea}.timeline-item:last-child:before{display:none}.symbol{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#eef2f6;font-size:21px;position:relative;z-index:1}.timeline-item h4{margin:1px 0 2px}.badge{display:inline-flex;padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:11px;font-weight:700;color:#475569}.status-unknown{color:#475569}.status-live{color:var(--green)}
+.search-card{display:flex;gap:10px}.search-card input{flex:1;padding:13px;border:1px solid #cbd5e1;border-radius:12px}.info-list{display:grid;gap:9px;margin-top:15px}.info-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #eef2f5;padding-bottom:8px;font-size:14px}.stat{min-height:125px}.stat .num{font-size:28px;font-weight:800;margin-top:12px}.source{font-size:14px}.safety{background:#fff;border-left:5px solid var(--red)}footer{background:var(--navy);color:#dbe5ef;padding:48px 0}.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}.footer-links{display:grid;gap:8px;font-size:14px}.small{font-size:12px;color:#94a8ba}.mobile-menu{display:none}
+@media(max-width:850px){.navlinks,.nav-actions{display:none}.mobile-menu{display:block;margin-left:auto}.fields,.grid-2,.grid-3,.grid-4,.footer-grid{grid-template-columns:1fr}.hero{padding:60px 0}.hero h1{letter-spacing:-2px}.map-shell{height:560px}.section-head{display:block}.planner{margin-top:-20px}.nav-inner{height:62px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+
+/* Clean white page background */
+html, body {
+  background: #ffffff;
+}
+
+
+.journey-live-card{margin-top:22px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+.journey-live-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap}.journey-live-head h3{margin:0}.journey-live-head p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.live-timeline{display:grid;gap:0}.live-item{display:grid;grid-template-columns:52px 1fr;gap:14px;position:relative;padding:10px 0 20px}.live-item:not(:last-child)::after{content:"";position:absolute;left:24px;top:54px;bottom:0;width:2px;background:#dbe3ea}.live-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f1f5f9;font-size:24px;position:relative;z-index:1}.live-item h4{margin:1px 0 3px;font-size:15px}.live-item .live-detail{color:var(--muted);font-size:13px}.live-train{margin-top:8px;padding:9px 11px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px}.live-train strong{font-weight:800}
+@media(max-width:650px){.live-item{grid-template-columns:46px 1fr}.live-icon{width:44px;height:44px}.live-item:not(:last-child)::after{left:21px}}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+<nav class="nav"><div class="container nav-inner"><a class="brand" href="#home">🚆 <span>RAILCUE</span></a><div class="navlinks"><a href="#home">Home</a><a href="#planner">Journey Planner</a><a href="#trains">Live Trains</a><a href="#stations">Stations</a><a href="#gates">Railway Gates</a><a href="#map-section">Railway Map</a><a href="#about">About</a></div><div class="nav-actions"><button class="btn btn-light" id="navSearch">Search</button><button class="btn btn-primary" id="navLocation">Use Location</button></div><button class="mobile-menu btn btn-light" aria-label="Open navigation">☰</button></div></nav>
+
+<main id="home">
+<section class="hero"><div class="container hero-content"><span class="eyebrow">🇮🇳 Indian railway information & geospatial awareness</span><h1>Track Your Journey.<br>Know the Railways Ahead.</h1><p>Explore trains, stations, railway tracks and crossings across India — all from one intelligent railway map.</p><div class="searchbar"><input id="globalSearch" placeholder="Search train, station, railway gate or destination…" autocomplete="off"><button class="btn btn-primary" id="globalSearchBtn">Search</button></div><div class="searchchips"><span class="chip">🚆 Trains</span><span class="chip">🚉 Stations</span><span class="chip">🚧 Railway Gates</span><span class="chip">🛤 Railway Tracks</span><span class="chip">📍 Places</span></div></div></section>
+
+<section class="planner" id="planner"><div class="container"><div class="planner-card"><div class="section-head" style="margin-bottom:18px"><div><h2>Plan Your Journey</h2><p>Choose where you enter and exit, then open the live map.</p></div></div><div class="fields"><div class="field"><label for="fromLocation">Starting Point</label><input id="fromLocation" placeholder="Enter starting location" autocomplete="off"></div><div class="field"><label for="toLocation">Destination</label><input id="toLocation" placeholder="Where are you going?" autocomplete="off"></div></div><div class="planner-actions"><label class="normal-option"><input id="normalDestination" type="checkbox"> Check as a normal destination</label><button class="btn btn-dark" id="useCurrentPlanner">📍 Use Current Location</button><button class="btn btn-primary" id="openMapBtn">🗺️ Open Map</button></div></div></div></section>
+
+
+<section id="journey-live"><div class="container"><div class="journey-live-card"><div class="journey-live-head"><div><h3>Live Journey Overview</h3><p>Starting point, mapped crossings, railway stations and destination update from the selected journey.</p></div><span class="badge">LIVE / MAPPED / API DEPENDENT</span></div><div class="live-timeline" id="journeyTimeline"><div class="live-item"><div class="live-icon">📍</div><div><h4>START</h4><div class="live-detail" id="journeyStartText">Your selected starting point</div></div></div><div class="live-item"><div class="live-icon">🚧</div><div><h4>Railway Gate</h4><div class="live-detail" id="journeyGate1Text">Crossing A · distance calculated from route</div><span class="badge status-unknown" id="journeyGate1Status">⚪ Status: Unknown</span></div></div><div class="live-item"><div class="live-icon">🚧</div><div><h4>Railway Gate</h4><div class="live-detail" id="journeyGate2Text">Crossing B · mapped crossing</div><span class="badge status-unknown" id="journeyGate2Status">⚪ Live gate status unavailable</span></div></div><div class="live-item"><div class="live-icon">🚉</div><div><h4>Railway Station</h4><div class="live-detail" id="journeyStationText">Station data from mapped railway sources</div></div></div><div class="live-item"><div class="live-icon">🏁</div><div><h4>DESTINATION</h4><div class="live-detail" id="journeyDestinationText">Your selected destination</div><div class="live-train" id="journeyTrainText"><strong>🚆 Train update:</strong> Live train position unavailable until a verified live train API is connected.</div></div></div></div></div></div></section>
+<section id="map-section"><div class="container"><div class="section-head"><div><h2>Interactive India Railway Map</h2><p>Mapped railway infrastructure is shown separately from live and scheduled information.</p></div><span class="badge">MAPPED DATA</span></div><div class="map-shell"><div id="map"></div><div class="map-ui"><div class="row"><input id="destination" placeholder="Search a destination…"><button class="btn btn-dark" id="findBtn">Find</button></div><div class="row"><button class="btn btn-light" id="locateBtn">📍 Start / Recenter GPS</button><button class="btn btn-dark" id="routeBtn">🧭 Route</button></div><div id="status" class="status">Start Live GPS or search a destination. Real mapped gates and railway stations will appear on the map.</div></div><div class="map-note">🚧 Gates · 🚉 Stations · 📍 User · 🏁 Destination</div></div></div></section>
+
+<section id="gates"><div class="container"><div class="section-head"><div><h2>Know Before You Reach the Gate.</h2><p>RAILCUE identifies mapped railway crossings and infrastructure along your journey. Live gate status is shown only when verified telemetry exists.</p></div></div><div class="grid grid-2"><div class="card"><h3>Railway Journey Data</h3><p class="muted">The Live Journey Overview above is the active display for the selected start, destination, mapped crossings and train-update state.</p><span class="badge">DYNAMIC</span></div><div class="card"><h3>Railway Gate Information</h3><div class="info-list"><div class="info-row"><span>Gate name / identifier</span><b>When available</b></div><div class="info-row"><span>Distance from current position</span><b>Route-based</b></div><div class="info-row"><span>Railway line</span><b>When mapped</b></div><div class="info-row"><span>Nearby station</span><b>When mapped</b></div><div class="info-row"><span>Coordinates</span><b>Mapped data</b></div><div class="info-row"><span>Data source</span><b>Displayed with result</b></div></div><p class="muted" style="margin-top:18px">⚪ <b>Status: Unknown</b> — Live gate telemetry is currently unavailable. Do not use RAILCUE as confirmation that a crossing is safe to cross.</p></div></div></div></section>
+
+<section id="trains"><div class="container"><div class="section-head"><div><h2>Live Train Tracking</h2><p>Search by train number or name. Only verified live APIs may populate live position, delay and update time.</p></div><span class="badge">LIVE API DEPENDENT</span></div><div class="grid grid-2"><div class="card"><div class="search-card"><input id="trainSearch" placeholder="Train number or train name"><button class="btn btn-primary" id="trainSearchBtn">Search Train</button></div><div class="info-list"><div class="info-row"><span>Example</span><b>12627 — Karnataka Express</b></div><div class="info-row"><span>Route</span><b>New Delhi → KSR Bengaluru</b></div><div class="info-row"><span>Current status</span><b class="status-unknown">🟡 Live data unavailable</b></div></div></div><div class="card"><h3>Train status</h3><p class="muted">When a verified live API is connected, this panel can show current location, last updated time, current/next station, delay, expected arrival and route progress.</p><span class="badge">NO SIMULATION</span></div></div></div></section>
+
+<section id="stations"><div class="container"><div class="section-head"><div><h2>Explore Indian Railway Stations</h2><p>Station symbols are reserved for actual railway station objects, not ordinary buildings or locations.</p></div></div><div class="card"><div class="search-card"><input id="stationSearch" placeholder="Search station or station code…"><button class="btn btn-dark" id="stationSearchBtn">Search Station</button></div><div class="grid grid-3" style="margin-top:18px"><div><b>🚉 Station name</b><div class="muted">Mapped station</div></div><div><b>Station code</b><div class="muted">When available</div></div><div><b>City / State</b><div class="muted">When available</div></div><div><b>Railway zone</b><div class="muted">When available</div></div><div><b>Coordinates</b><div class="muted">Mapped data</div></div><div><b>Nearby gates / tracks</b><div class="muted">Spatially calculated</div></div></div></div></div></section>
+
+<section><div class="container"><div class="section-head"><div><h2>Railway Infrastructure Near You</h2><p>Use your location only when you explicitly select the location feature.</p></div></div><div class="grid grid-4"><div class="card"><h3>🚉 Stations Near Me</h3><p class="muted">Mapped stations around your position.</p></div><div class="card"><h3>🚧 Railway Gates Near Me</h3><p class="muted">Mapped railway crossings.</p></div><div class="card"><h3>🛤 Tracks Near Me</h3><p class="muted">Railway map infrastructure.</p></div><div class="card"><h3>🚆 Trains Near Me</h3><p class="muted">Live data only when an API supports it.</p></div></div><button class="btn btn-primary" id="nearMeBtn" style="margin-top:18px">Use My Location</button></div></section>
+
+<section><div class="container"><div class="section-head"><div><h2>Railway Network Dashboard</h2><p>Counts are intentionally not fabricated; connected datasets can populate these cards dynamically.</p></div></div><div class="grid grid-4"><div class="card stat"><div>Railway Stations</div><div class="num">Data-driven</div></div><div class="card stat"><div>Railway Tracks</div><div class="num">Map data</div></div><div class="card stat"><div>Railway Gates</div><div class="num">Mapped crossings</div></div><div class="card stat"><div>Train Services</div><div class="num">Schedule data</div></div></div></div></section>
+
+<section id="about"><div class="container"><div class="section-head"><div><h2>RAILCUE Data Center</h2><p>Every result should communicate whether it is LIVE, SCHEDULED, MAPPED, DEMO or UNAVAILABLE.</p></div></div><div class="card"><div class="info-list"><div class="info-row"><span>Railway Maps</span><b class="status-live">🟢 Available</b></div><div class="info-row"><span>Station Data</span><b class="status-live">🟢 Available</b></div><div class="info-row"><span>Train Schedule</span><b class="status-live">🟢 Schedule data</b></div><div class="info-row"><span>Live Train Position</span><b>🟡 API dependent</b></div><div class="info-row"><span>Live Gate Status</span><b>⚪ Not available</b></div></div></div></div></section>
+
+<section><div class="container"><div class="grid grid-2"><div class="card source"><h2>Built With Railway & Geospatial Data</h2><p>Where applicable: OpenStreetMap, OpenRailwayMap, Indian railway datasets, railway timetable APIs and verified train running-status APIs.</p><p class="muted">Map data, station data, schedule data, live train data and live gate data are kept distinct. RAILCUE does not claim official Indian Railways affiliation unless such authorization exists.</p></div><div class="card safety"><h2>Railway Safety Comes First</h2><p>RAILCUE provides journey awareness and railway infrastructure information. Always follow railway signals, barriers, traffic signs and instructions from railway authorities.</p><b>Do not use RAILCUE as confirmation that a railway crossing is safe to cross.</b></div></div></div></section>
+</main>
+<footer><div class="container footer-grid"><div><h2>🚆 RAILCUE Live Tracker</h2><p>Track Your Journey. Know the Railways Ahead.</p><p class="small">RAILCUE Live Tracker is an independent railway information and mapping platform unless otherwise stated.</p></div><div class="footer-links"><b>Explore</b><a href="#planner">Journey Planner</a><a href="#trains">Live Trains</a><a href="#stations">Stations</a><a href="#gates">Railway Gates</a></div><div class="footer-links"><b>Information</b><a href="#map-section">Railway Map</a><a href="#about">Data Sources</a><a href="#about">API</a><a href="#about">Privacy · Terms · Contact</a></div></div></footer>
+
+<script>
+  // MapTiler API key supplied by the user.
+  // IMPORTANT: restrict this key to your domain/app in MapTiler Cloud.
+  const MAPTILER_API_KEY = "weHuIPutbZevrQFNT9q5";
+
+  maptilersdk.config.apiKey = MAPTILER_API_KEY;
+  const CUSTOM_MAP_STYLE = "https://api.maptiler.com/maps/01a0c4f1-e56d-767b-9185-e6235fce5e18/style.json?key=weHuIPutbZevrQFNT9q5";
+
+  const map = new maptilersdk.Map({
+    container: "map",
+    style: CUSTOM_MAP_STYLE,
+    center: [0.00000, 0.00000],
+    zoom:    1.0
+  });
+
+  let userPosition = null;
+  let destination = null;
+  let userMarker = null;
+  let destinationMarker = null;
+  let watchId = null;
+  let gateMarkers = [];
+  let lastGateLookup = null;
+  let lastGateLookupTime = 0;
+  let lastGpsFix = null;
+  let gpsFixCount = 0;
+  let autoFollowUser = true;
+  let isMapInteracting = false;
+  let mappedGateData = [];
+
+  const journeyStartText = document.getElementById("journeyStartText");
+  const journeyGate1Text = document.getElementById("journeyGate1Text");
+  const journeyGate2Text = document.getElementById("journeyGate2Text");
+  const journeyGate1Status = document.getElementById("journeyGate1Status");
+  const journeyGate2Status = document.getElementById("journeyGate2Status");
+  const journeyStationText = document.getElementById("journeyStationText");
+  const journeyDestinationText = document.getElementById("journeyDestinationText");
+  const journeyTrainText = document.getElementById("journeyTrainText");
+  let plannerStartName = "";
+
+  function formatDistance(meters) {
+    if (!Number.isFinite(meters)) return "distance unavailable";
+    return meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(2)} km`;
+  }
+  function updateJourneyOverview() {
+    const fromInput=document.getElementById("fromLocation")?.value.trim();
+    const toInput=document.getElementById("toLocation")?.value.trim();
+    journeyStartText.textContent=plannerStartName||fromInput||(userPosition?`Live GPS location · ${userPosition[1].toFixed(6)}, ${userPosition[0].toFixed(6)}`:"Your selected starting point");
+    journeyDestinationText.textContent=toInput||(destination?`Selected destination · ${destination[1].toFixed(6)}, ${destination[0].toFixed(6)}`:"Your selected destination");
+    if(mappedGateData.length){const g1=mappedGateData[0],g2=mappedGateData[1];journeyGate1Text.textContent=`${g1.name} · ${formatDistance(g1.distance)} from current/map reference`;journeyGate2Text.textContent=g2?`${g2.name} · ${formatDistance(g2.distance)} from current/map reference`:"No second mapped crossing currently available";journeyGate1Status.textContent="⚪ Status: Unknown";journeyGate2Status.textContent=g2?"⚪ Live gate status unavailable":"⚪ No mapped crossing";}
+  }
+  function updateJourneyTrainStatus(message){ journeyTrainText.innerHTML=`<strong>🚆 Train update:</strong> ${escapeHtml(message)}`; }
+
+  const statusEl = document.getElementById("status");
+
+  function setStatus(message) {
+    statusEl.innerHTML = message;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+    }[c]));
+  }
+
+  function updateUserMarker(lat, lon, accuracy, heading, speed) {
+    userPosition = [lon, lat];
+    gpsFixCount++;
+    if (!plannerStartName) plannerStartName = "Live GPS current location";
+    updateJourneyOverview();
+
+    if (!userMarker) {
+      userMarker = new maptilersdk.Marker({
+        element: makeUserElement(),
+        anchor: "center"
+      })
+        .setLngLat(userPosition)
+        .addTo(map);
+    } else {
+      userMarker.setLngLat(userPosition);
+    }
+
+    // Recenter automatically while the user is being tracked.
+    // If the user manually pans/zooms, follow mode pauses until GPS is started again.
+    if (autoFollowUser && !isMapInteracting) {
+      const currentZoom = map.getZoom();
+      map.easeTo({
+        center: userPosition,
+        zoom: Math.max(currentZoom, 16),
+        duration: 700,
+        essential: true
+      });
+    }
+
+    const accuracyText = Number.isFinite(accuracy) ? `±${Math.round(accuracy)} m` : "unknown";
+    const speedText = Number.isFinite(speed) && speed >= 0 ? `${(speed * 3.6).toFixed(1)} km/h` : "—";
+    const headingText = Number.isFinite(heading) ? `${Math.round(heading)}°` : "—";
+
+    setStatus(
+      `<b>LIVE GPS</b><br>` +
+      `Latitude: ${lat.toFixed(6)}<br>` +
+      `Longitude: ${lon.toFixed(6)}<br>` +
+      `Accuracy: ${accuracyText}<br>` +
+      `Speed: ${speedText} · Heading: ${headingText}<br>` +
+      `GPS fixes: ${gpsFixCount}<br>` +
+      `Updated: ${new Date().toLocaleTimeString()}`
+    );
+  }
+
+  function makeUserElement() {
+    const el = document.createElement("div");
+    el.className = "user-label";
+    el.innerHTML = `
+      <svg width="42" height="42" viewBox="0 0 42 42" aria-label="Live user location">
+        <circle cx="21" cy="21" r="17" fill="#001F8F" fill-opacity="0.18"/>
+        <circle cx="21" cy="21" r="12" fill="#001F8F" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="21" cy="21" r="4" fill="#ffffff"/>
+        <path d="M21 2 V9 M21 33 V40 M2 21 H9 M33 21 H40"
+              stroke="#001F8F" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>`;
+    return el;
+  }
+
+  function distanceMeters(a, b) {
+    if (!a || !b) return Infinity;
+    const R = 6371000;
+    const p1 = a[1] * Math.PI / 180;
+    const p2 = b[1] * Math.PI / 180;
+    const dLat = (b[1] - a[1]) * Math.PI / 180;
+    const dLon = (b[0] - a[0]) * Math.PI / 180;
+    const h = Math.sin(dLat / 2) ** 2 +
+      Math.cos(p1) * Math.cos(p2) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  function startGPS() {
+    if (!navigator.geolocation) {
+      console.warn("Geolocation API is not available in this browser.");
+      return;
+    }
+
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+
+    autoFollowUser = true;
+    isMapInteracting = false;
+    gpsFixCount = 0;
+    lastGpsFix = null;
+    lastGateLookup = null;
+    lastGateLookupTime = 0;
+
+    setStatus("Requesting high-accuracy live GPS…");
+
+    watchId = navigator.geolocation.watchPosition(
+      pos => {
+        const { latitude: lat, longitude: lon, accuracy, heading, speed } = pos.coords;
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+        // Ignore clearly poor fixes when a better fix is already available.
+        if (lastGpsFix && Number.isFinite(accuracy) && Number.isFinite(lastGpsFix.accuracy)) {
+          const jump = distanceMeters([lon, lat], [lastGpsFix.lon, lastGpsFix.lat]);
+          const elapsed = Math.max(1, (pos.timestamp - lastGpsFix.timestamp) / 1000);
+          const impliedSpeed = jump / elapsed;
+
+          if (accuracy > 150 && jump > 1000 && impliedSpeed > 100) {
+            return;
+          }
+        }
+
+        lastGpsFix = {
+          lat, lon,
+          accuracy: Number.isFinite(accuracy) ? accuracy : null,
+          timestamp: pos.timestamp
+        };
+
+        updateUserMarker(lat, lon, accuracy, heading, speed);
+
+        // Refresh mapped crossings every 5 km or every 2 minutes while moving.
+        const now = Date.now();
+        const movedEnough =
+          !lastGateLookup ||
+          distanceMeters(userPosition, lastGateLookup) >= 5000;
+        const timeRefresh =
+          !lastGateLookupTime ||
+          now - lastGateLookupTime >= 120000;
+
+        if (movedEnough || timeRefresh) {
+          lastGateLookup = [...userPosition];
+          lastGateLookupTime = now;
+          Promise.all([
+            loadRailwayGates(userPosition),
+            loadRailwayStations(userPosition)
+          ]).catch(err => console.warn("Map feature refresh failed:", err));
+        }
+      },
+      err => {
+        console.warn("GPS unavailable:", err);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 15000
+      }
+    );
+  }
+
+  async function searchDestination() {
+    const q = document.getElementById("destination").value.trim();
+    if (!q) return;
+
+    setStatus("Searching destination with MapTiler…");
+
+    const url =
+      `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json?` +
+      `key=${encodeURIComponent(MAPTILER_API_KEY)}&limit=1`;
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`MapTiler HTTP ${res.status}`);
+      const data = await res.json();
+
+      if (!data.features || !data.features.length) {
+        setStatus("Destination not found.");
+        return;
+      }
+
+      const f = data.features[0];
+      destination = f.center;
+      const destinationName = f.place_name || q;
+      const toInput = document.getElementById("toLocation");
+      if (toInput) toInput.value = destinationName;
+      updateJourneyOverview();
+
+      if (destinationMarker) destinationMarker.remove();
+
+      const destinationElement = document.createElement("div");
+      destinationElement.className = "destination-label";
+      destinationElement.innerHTML = `
+        <svg width="48" height="56" viewBox="0 0 48 56" aria-label="Destination">
+          <path d="M24 53 C20 45 5 33 5 21 C5 10.7 13.5 3 24 3 C34.5 3 43 10.7 43 21 C43 33 28 45 24 53Z"
+                fill="#000000" stroke="#ffffff" stroke-width="3"/>
+          <circle cx="24" cy="21" r="10" fill="#ffffff"/>
+        </svg>`;
+
+      destinationMarker = new maptilersdk.Marker({ element: destinationElement })
+        .setLngLat(destination)
+        .setPopup(
+          new maptilersdk.Popup().setHTML(
+            `<b>Destination</b><br>${escapeHtml(f.place_name || q)}`
+          )
+        )
+        .addTo(map);
+
+      // When a location is searched, immediately zoom to it and keep the
+      // destination pin centered so the searched place is easy to identify.
+      map.flyTo({
+        center: destination,
+        zoom: 16,
+        speed: 1.2,
+        curve: 1.4,
+        essential: true
+      });
+
+      // Open the destination popup after the map finishes moving.
+      map.once("moveend", () => {
+        if (destinationMarker) destinationMarker.togglePopup();
+      });
+      lastGateLookupTime = Date.now();
+      await Promise.all([
+        loadRailwayGates(destination),
+        loadRailwayStations(destination)
+      ]);
+
+      updateJourneyTrainStatus("Live train position unavailable until a verified live train API is connected.");
+      setStatus(
+        `<b>Destination selected</b><br>${escapeHtml(f.place_name || q)}<br>` +
+        `MapTiler coordinates: ${destination[1].toFixed(6)}, ${destination[0].toFixed(6)}<br>` +
+        `🚆 Train update: verified live API required for real-time train position.`
+      );
+      updateJourneyOverview();
+    } catch (e) {
+      setStatus(`<b>Search failed:</b> ${escapeHtml(e.message)}`);
+    }
+  }
+
+
+  const stationMarkers = new Map();
+
+
+  // STRICT RAILWAY FEATURE CLASSIFICATION
+  // Never classify from name keywords alone. Railway symbols/labels are only
+  // allowed after the mapped physical feature itself is verified by metadata.
+  function classifyLocationFeature(feature = {}) {
+    const tags = feature.tags || feature.properties || {};
+    const railway = String(tags.railway || "").toLowerCase();
+    const crossing = String(tags.crossing || "").toLowerCase();
+    const barrier = String(tags["crossing:barrier"] || tags.barrier || "").toLowerCase();
+    const highway = String(tags.highway || "").toLowerCase();
+    const junction = String(tags.junction || "").toLowerCase();
+    const place = String(tags.place || "").toLowerCase();
+    const name = String(tags.name || "").trim();
+
+    // Actual mapped railway station object.
+    if (railway === "station") {
+      return {
+        name,
+        category: "railway_station",
+        railway_symbol: true,
+        railway_name: name || "Railway Station",
+        confidence: "high",
+        reason: "The map feature is explicitly tagged as a railway station."
+      };
+    }
+
+    // Actual railway gate / level crossing. Explicit physical crossing metadata
+    // takes precedence over the feature's name.
+    if (railway === "level_crossing" ||
+        crossing === "level_crossing" ||
+        barrier === "gate" && (railway === "level_crossing" || crossing === "railway")) {
+      return {
+        name,
+        category: "railway_gate",
+        railway_symbol: true,
+        railway_name: name || "Mapped Railway Gate",
+        confidence: "high",
+        reason: "The mapped feature is explicitly identified as a physical railway level crossing/gate."
+      };
+    }
+
+    // Actual railway crossing, only when the metadata confirms it is a rail crossing.
+    if (railway === "crossing" &&
+        (crossing === "railway" || crossing === "level_crossing")) {
+      return {
+        name,
+        category: "railway_crossing",
+        railway_symbol: true,
+        railway_name: name || "Mapped Railway Crossing",
+        confidence: "high",
+        reason: "The mapped feature is explicitly identified as a railway crossing."
+      };
+    }
+
+    // Road/highway/junction classification takes priority for non-railway features.
+    if (highway === "motorway" || highway === "trunk" ||
+        highway === "primary" || highway === "secondary" ||
+        highway === "tertiary" || highway === "motorway_link" ||
+        highway === "trunk_link" || highway === "primary_link" ||
+        highway === "secondary_link" || highway === "tertiary_link") {
+      return {
+        name,
+        category: "highway",
+        railway_symbol: false,
+        railway_name: null,
+        confidence: "high",
+        reason: "The mapped physical feature is a highway; railway-related words in its name do not change its category."
+      };
+    }
+
+    if (highway) {
+      return {
+        name,
+        category: "road",
+        railway_symbol: false,
+        railway_name: null,
+        confidence: "high",
+        reason: "The mapped physical feature is a road; railway-related words in its name do not change its category."
+      };
+    }
+
+    if (junction || place === "junction") {
+      return {
+        name,
+        category: "junction",
+        railway_symbol: false,
+        railway_name: null,
+        confidence: "high",
+        reason: "The mapped physical feature is a junction, not a railway feature."
+      };
+    }
+
+    return {
+      name,
+      category: "unknown",
+      railway_symbol: false,
+      railway_name: null,
+      confidence: "low",
+      reason: "Available metadata does not reliably establish a railway station, railway gate/level crossing, railway crossing, road, highway, or junction."
+    };
+  }
+
+  function railwayDisplayAllowed(classification) {
+    return Boolean(
+      classification &&
+      ["railway_station", "railway_gate", "railway_crossing"].includes(classification.category) &&
+      classification.railway_symbol === true
+    );
+  }
+
+  function makeStationElement() {
+    const el = document.createElement("div");
+    el.className = "station-label";
+    el.style.width = "52px";
+    el.style.height = "52px";
+    el.style.display = "flex";
+    el.style.alignItems = "center";
+    el.style.justifyContent = "center";
+    el.innerHTML = `
+      <svg width="52" height="52" viewBox="0 0 52 52" aria-label="Railway station" role="img">
+        <!-- station badge -->
+        <circle cx="26" cy="26" r="23" fill="#0284C7" stroke="#ffffff" stroke-width="3"/>
+        <!-- railway tracks -->
+        <path d="M11 39 H41 M15 35 H37" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M18 35 L15 41 M34 35 L37 41" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- front of train -->
+        <path d="M17 29 V18 C17 15.8 18.8 14 21 14 H31 C33.2 14 35 15.8 35 18 V29 L31 33 H21 Z"
+              fill="none" stroke="#ffffff" stroke-width="2.7" stroke-linejoin="round"/>
+        <path d="M20 20 H32" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="21" cy="29" r="2" fill="#ffffff"/>
+        <circle cx="31" cy="29" r="2" fill="#ffffff"/>
+        <path d="M23 25 H29" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+    return el;
+  }
+
+  function addStationMarker(id, longitude, latitude, name = "Railway Station") {
+    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return null;
+    const key = String(id);
+
+    let marker = stationMarkers.get(key);
+    if (!marker) {
+      marker = new maptilersdk.Marker({
+        element: makeStationElement(),
+        anchor: "center"
+      })
+        .setLngLat([longitude, latitude])
+        .setPopup(
+          new maptilersdk.Popup({ maxWidth: "280px" })
+            .setHTML(`<b>🚉 ${escapeHtml(displayName)}</b><br>Railway station`)
+        )
+        .addTo(map);
+
+      stationMarkers.set(key, marker);
+    } else {
+      marker.setLngLat([longitude, latitude]);
+    }
+    return marker;
+  }
+
+  function clearStationMarkers() {
+    for (const marker of stationMarkers.values()) marker.remove();
+    stationMarkers.clear();
+  }
+
+  // Load real mapped railway stations from OpenStreetMap/Overpass.
+  // These are geographic station locations, not simulated positions.
+  async function loadRailwayStations([lon, lat]) {
+    clearStationMarkers();
+
+    const query = `
+      [out:json][timeout:45];
+      (
+        node(around:25000,${lat},${lon})["railway"="station"];
+        way(around:25000,${lat},${lon})["railway"="station"];
+      );
+      out center tags;
+    `;
+
+    const endpoints = [
+      "https://overpass-api.de/api/interpreter",
+      "https://overpass.kumi.systems/api/interpreter",
+      "https://overpass.private.coffee/api/interpreter"
+    ];
+
+    let data = null;
+    for (const endpoint of endpoints) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 45000);
+        const res = await fetch(endpoint + "?data=" + encodeURIComponent(query), {
+          signal: controller.signal,
+          cache: "no-store",
+          headers: { "Accept": "application/json" }
+        });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const candidate = await res.json();
+        if (candidate && Array.isArray(candidate.elements)) {
+          data = candidate;
+          break;
+        }
+      } catch (e) {
+        console.warn("Station endpoint failed:", endpoint, e);
+      }
+    }
+
+    if (!data) {
+      console.warn("Railway station service unavailable.");
+      return 0;
+    }
+
+    const seen = new Set();
+    let count = 0;
+
+    for (const station of data.elements) {
+      let stationLon = station.lon;
+      let stationLat = station.lat;
+      if ((stationLat == null || stationLon == null) && station.center) {
+        stationLat = station.center.lat;
+        stationLon = station.center.lon;
+      }
+      if (!Number.isFinite(stationLat) || !Number.isFinite(stationLon)) continue;
+
+      const key = `${stationLat.toFixed(5)},${stationLon.toFixed(5)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const tags = station.tags || {};
+      const name = tags.name || tags.ref || "Railway Station";
+      const id = `${station.type || "osm"}-${station.id}`;
+      addStationMarker(id, stationLon, stationLat, name, tags);
+      count++;
+    }
+
+    return count;
+  }
+
+  async function loadRailwayGates([lon, lat]) {
+    gateMarkers.forEach(m => m.remove());
+    gateMarkers = [];
+
+    // IMPORTANT: never assign a gate/crossing symbol to railway tracks.
+    // Only explicitly mapped railway crossing objects are eligible.
+    // Track ways are intentionally excluded.
+    const query = `
+      [out:json][timeout:45];
+      (
+        node(around:25000,${lat},${lon})["railway"="level_crossing"];
+        node(around:25000,${lat},${lon})["railway"="crossing"]["crossing"~"railway|level_crossing",i];
+        node(around:25000,${lat},${lon})["crossing"="railway"];
+      );
+      out tags;
+    `;
+
+    const endpoints = [
+      "https://overpass-api.de/api/interpreter",
+      "https://overpass.kumi.systems/api/interpreter",
+      "https://overpass.private.coffee/api/interpreter"
+    ];
+
+    let data = null;
+
+    for (const endpoint of endpoints) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 45000);
+        const res = await fetch(
+          endpoint + "?data=" + encodeURIComponent(query),
+          {
+            signal: controller.signal,
+            cache: "no-store",
+            headers: { "Accept": "application/json" }
+          }
+        );
+        clearTimeout(timer);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const candidate = await res.json();
+        if (candidate && Array.isArray(candidate.elements)) {
+          data = candidate;
+          break;
+        }
+      } catch (e) {
+        console.warn("Railway data endpoint failed:", endpoint, e);
+      }
+    }
+
+    if (!data) {
+      setStatus("<b>Railway gate service temporarily unavailable.</b><br>Map and live GPS are still working.");
+      return;
+    }
+
+    const seen = new Set();
+    const gates = [];
+
+    for (const gate of data.elements) {
+      let gateLon = gate.lon;
+      let gateLat = gate.lat;
+
+      if ((gateLat == null || gateLon == null) && gate.center) {
+        gateLat = gate.center.lat;
+        gateLon = gate.center.lon;
+      }
+
+      if (!Number.isFinite(gateLat) || !Number.isFinite(gateLon)) continue;
+
+      const key = `${gateLat.toFixed(6)},${gateLon.toFixed(6)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const gatePosition = [gateLon, gateLat];
+      gates.push({
+        lat: gateLat,
+        lon: gateLon,
+        distance: distanceMeters([lon, lat], gatePosition),
+        tags: gate.tags || {}
+      });
+    }
+
+    gates.sort((a, b) => a.distance - b.distance);
+    mappedGateData = gates.map((g, i) => ({ ...g, id: `gate-${i + 1}`, name: g.tags.name || g.tags.ref || `Railway Gate ${i + 1}` }));
+
+    gates.forEach((gate, index) => {
+      const el = document.createElement("div");
+      el.className = "gate-label";
+      el.innerHTML = `<span aria-label="Railway gate / crossing" role="img" style="font-size:36px;line-height:1;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">🚧</span>`;
+      el.title = `Railway gate ${index + 1}`;
+
+      const name = gate.tags.name || gate.tags.ref || `Railway Gate ${index + 1}`;
+      const distanceKm = gate.distance < 1000
+        ? `${Math.round(gate.distance)} m`
+        : `${(gate.distance / 1000).toFixed(2)} km`;
+
+      const crossingType =
+        gate.tags["crossing:barrier"] || gate.tags.barrier || gate.tags.crossing || "physical gate/barrier";
+
+      const marker = new maptilersdk.Marker({
+        element: el,
+        anchor: "center"
+      })
+        .setLngLat([gate.lon, gate.lat])
+        .setPopup(new maptilersdk.Popup({ maxWidth: "280px" }).setHTML(
+          `<b>🚆 ${escapeHtml(name)}</b><br>` +
+          `Gate #${index + 1}<br>` +
+          `Distance: ${distanceKm}<br>` +
+          `Type: ${escapeHtml(crossingType)}<br>` +
+          `Coordinates: ${gate.lat.toFixed(6)}, ${gate.lon.toFixed(6)}<br>` +
+          `<small>Mapped physical railway gate/barrier. This marker does not indicate live gate open/closed telemetry.</small>`
+        ))
+        .addTo(map);
+
+      gateMarkers.push(marker);
+    });
+
+    updateJourneyOverview();
+    setStatus(
+      `<b>Railway gates updated</b><br>` +
+      `${gateMarkers.length} verified railway gate/crossing feature(s) found within 25 km.<br>` +
+      `Updated: ${new Date().toLocaleTimeString()}`
+    );
+  }
+
+  async function drawRoute() {
+    if (!userPosition || !destination) {
+      setStatus("Start Live GPS and select a destination first.");
+      return;
+    }
+
+    setStatus("Calculating route…");
+
+    const [slon, slat] = userPosition;
+    const [dlon, dlat] = destination;
+
+    const url =
+      `https://router.project-osrm.org/route/v1/driving/` +
+      `${slon},${slat};${dlon},${dlat}?overview=full&geometries=geojson`;
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Routing service unavailable");
+      const data = await res.json();
+
+      if (!data.routes?.length) throw new Error("No route found");
+
+      const geometry = data.routes[0].geometry;
+      lastRouteGeometry = geometry;
+      lastRouteDistanceKm = data.routes[0].distance / 1000;
+
+      if (map.getLayer("live-route")) map.removeLayer("live-route");
+      if (map.getSource("live-route")) map.removeSource("live-route");
+
+      map.addSource("live-route", {
+        type: "geojson",
+        data: { type: "Feature", geometry }
+      });
+
+      map.addLayer({
+        id: "live-route",
+        type: "line",
+        source: "live-route",
+        paint: {
+          "line-color": "#2563eb",
+          "line-width": 5,
+          "line-opacity": 0.85
+        }
+      });
+
+      map.fitBounds(
+        [
+          [slon, slat],
+          [dlon, dlat]
+        ],
+        { padding: 100, maxZoom: 16 }
+      );
+
+      const km = (data.routes[0].distance / 1000).toFixed(2);
+      await Promise.all([
+        loadRailwayGates(userPosition),
+        loadRailwayStations(userPosition)
+      ]);
+      setStatus(
+        `<b>LIVE ROUTE</b><br>` +
+        `Distance: ${km} km<br>` +
+        `Railway crossings refresh automatically as GPS moves.<br>` +
+        `GPS continues updating in real time.`
+      );
+    } catch (e) {
+      setStatus(`<b>Route error:</b> ${escapeHtml(e.message)}`);
+    }
+  }
+
+  document.getElementById("openMapBtn").addEventListener("click", () => {
+    const from = document.getElementById("fromLocation").value.trim();
+    const to = document.getElementById("toLocation").value.trim();
+    const normalDestination = document.getElementById("normalDestination").checked;
+    plannerStartName = from || plannerStartName || "";
+    updateJourneyOverview();
+
+    if (!to) {
+      alert("Please enter a destination.");
+      document.getElementById("toLocation").focus();
+      return;
+    }
+
+    document.getElementById("destination").value = to;
+    setStatus(
+      `${from ? `Starting point: ${escapeHtml(from)}<br>` : ""}` +
+      `Destination: ${escapeHtml(to)}` +
+      `${normalDestination ? "<br>Normal destination selected." : ""}`
+    );
+
+    document.getElementById("map-section").scrollIntoView({behavior:"smooth", block:"start"});
+    setTimeout(() => {
+      map.resize();
+      searchDestination();
+    }, 350);
+  });
+
+  document.getElementById("useCurrentPlanner").addEventListener("click", () => {
+    startGPS();
+    document.getElementById("map-section").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+
+  document.getElementById("globalSearchBtn").addEventListener("click", () => {
+    const q = document.getElementById("globalSearch").value.trim();
+    if (!q) return;
+    document.getElementById("destination").value = q;
+    document.getElementById("map-section").scrollIntoView({behavior:"smooth", block:"start"});
+    setTimeout(() => { map.resize(); searchDestination(); }, 350);
+  });
+
+  document.getElementById("globalSearch").addEventListener("keydown", e => {
+    if (e.key === "Enter") document.getElementById("globalSearchBtn").click();
+  });
+
+  document.getElementById("navLocation").addEventListener("click", () => {
+    document.getElementById("map-section").scrollIntoView({behavior:"smooth", block:"start"});
+    setTimeout(() => { map.resize(); startGPS(); }, 350);
+  });
+
+  document.getElementById("nearMeBtn").addEventListener("click", () => {
+    document.getElementById("map-section").scrollIntoView({behavior:"smooth", block:"start"});
+    setTimeout(() => { map.resize(); startGPS(); }, 350);
+  });
+
+  document.getElementById("navSearch").addEventListener("click", () => {
+    document.getElementById("globalSearch").focus();
+    document.getElementById("home").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+
+  document.getElementById("locateBtn").addEventListener("click", startGPS);
+  document.getElementById("findBtn").addEventListener("click", searchDestination);
+  document.getElementById("routeBtn").addEventListener("click", drawRoute);
+
+  document.getElementById("destination").addEventListener("keydown", e => {
+    if (e.key === "Enter") searchDestination();
+  });
+
+  // Manual map movement temporarily disables auto-follow so the user can inspect the map.
+  map.on("dragstart", () => {
+    isMapInteracting = true;
+    autoFollowUser = false;
+  });
+
+  map.on("zoomstart", () => {
+    isMapInteracting = true;
+    autoFollowUser = false;
+  });
+
+  map.on("dragend", () => {
+    isMapInteracting = false;
+  });
+
+  map.on("zoomend", () => {
+    isMapInteracting = false;
+  });
+
+  // GPS is never requested automatically. It starts only after an explicit user action.
+  map.on("load", () => map.resize());
+</script>
+
+<footer class="site-footer" style="width:100%;box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:18px 24px;text-align:center;">
+<div style="margin-top:22px;padding-top:14px;border-top:1px solid #f1f5f9;font-size:12px;font-weight:800;letter-spacing:.08em;color:#334155;">© ALL RIGHTS ARE RESERVED BY RAILCUE TEAM</div>
+</footer>
+</footer>
+</body>
+</html>
