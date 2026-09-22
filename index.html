@@ -883,7 +883,55 @@ html, body {
 </footer>
 </footer>
 <script>
-window.RAILCUE_API_BASE=window.RAILCUE_API_BASE||new URLSearchParams(window.location.search).get("api")||localStorage.getItem("RAILCUE_API_BASE")||"";
+window.RAILCUE_API_BASE=window.RAILCUE_API_BASE||new URLSearchParams(window.location.search).get("api")||localStorage.getItem("RAILCUE_API_BASE")||"https://railcue-1.onrender.com";
+async function railcueApi(path,options={}){const base=String(window.RAILCUE_API_BASE||"").replace(/\/$/,"");const r=await fetch(base+path,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error?.message||d.error||"Backend request failed");return d;}
+
+async function refreshPrakasamRailRun(){
+  if(!window.userPosition||!window.destination)return;
+  try{
+    const payload={start:{latitude:userPosition[1],longitude:userPosition[0]},destination:{latitude:destination[1],longitude:destination[0]}};
+    if(typeof lastRouteGeometry!=="undefined"&&lastRouteGeometry) payload.routeGeometry=lastRouteGeometry;
+    const result=(await railcueApi("/api/prakasam/rail-run",{method:"POST",body:JSON.stringify(payload)})).data||{};
+    const gates=Array.isArray(result.gates)?result.gates:[]; const g1=gates[0],g2=gates[1];
+    const setGate=(textEl,statusEl,g)=>{
+      if(!textEl||!statusEl)return; if(!g){textEl.textContent="No Prakasam trial crossing matched to this route";statusEl.textContent="⚪ Status: Unknown";return;}
+      const next=g.approaching_trains?.[0]; const predicted=g.predicted_gate_status||"NO_PREDICTION"; const eta=next?.eta_minutes!=null?" · Train "+next.train_number+" ETA "+next.eta_minutes+" min":"";
+      textEl.textContent=(g.name||g.gate_code||"Railway Gate")+" · "+Number(g.route_distance_km||0).toFixed(2)+" km from route";
+      statusEl.textContent="⚪ Physical: UNKNOWN · Prediction: "+predicted+eta;
+    };
+    setGate(journeyGate1Text,journeyGate1Status,g1); setGate(journeyGate2Text,journeyGate2Status,g2);
+    const next=gates.flatMap(g=>g.approaching_trains||[]).sort((a,b)=>(a.eta_minutes??Infinity)-(b.eta_minutes??Infinity))[0];
+    updateJourneyTrainStatus(next?"Prakasam trial train "+next.train_number+" · "+next.distance_to_gate_km+" km to matched gate · ETA "+(next.eta_minutes??"—")+" min · SIMULATED":"No approaching trial train within the configured gate radius.");
+    return result;
+  }catch(e){console.warn("Prakasam rail-run unavailable:",e.message);updateJourneyTrainStatus("Prakasam backend unavailable; mapped railway data remains available.");return null;}
+}
+async function refreshRailcueJourneyBackend(){return refreshPrakasamRailRun();}
+
+async function refreshLivePrakasamTrains(){
+  const panel=document.querySelector("#trains .grid-2 .card:last-child"); if(!panel)return;
+  try{
+    const d=await railcueApi("/api/prakasam/trains/live"); const trains=Array.isArray(d.trains)?d.trains:[];
+    panel.innerHTML="<h3>Prakasam trial train feed</h3><p class=\"muted\"><b>SIMULATED / TEMPORARY TRIAL DATABASE</b> · "+trains.length+" train positions loaded.</p><div class=\"info-list\">"+trains.slice(0,8).map(t=>"<div class=\"info-row\"><span>🚆 "+escapeHtml(t.train_number??"Unknown")+"</span><b>"+Number(t.speed||0).toFixed(1)+" km/h · "+Number(t.latitude??t.lat).toFixed(4)+", "+Number(t.longitude??t.lng).toFixed(4)+"</b></div>").join("")+"</div><span class=\"badge\">NOT OFFICIAL LIVE TELEMETRY</span>";
+  }catch(e){console.warn("Prakasam train feed unavailable:",e.message);}
+}
+
+async function searchPrakasamTrain(){
+  const input=document.getElementById("trainSearch"),panel=document.querySelector("#trains .grid-2 .card:last-child"),number=(input?.value||"").trim(); if(!number||!panel)return;
+  panel.innerHTML="<h3>Train status</h3><p class=\"muted\">Loading Prakasam trial train data…</p>";
+  try{
+    const d=await railcueApi("/api/prakasam/trains/"+encodeURIComponent(number)+"/status");
+    if(d.status==="not_found"){panel.innerHTML="<h3>Train status</h3><p class=\"muted\">Train not found in the Prakasam trial database.</p>";return;}
+    const s=d.state||{},sch=Array.isArray(d.schedule)?d.schedule:[];
+    panel.innerHTML="<h3>Train "+escapeHtml(number)+"</h3><div class=\"info-list\"><div class=\"info-row\"><span>Status</span><b>"+escapeHtml(s.status||"AVAILABLE")+"</b></div><div class=\"info-row\"><span>Position</span><b>"+(s.latitude!=null?Number(s.latitude).toFixed(5):"—")+", "+(s.longitude!=null?Number(s.longitude).toFixed(5):"—")+"</b></div><div class=\"info-row\"><span>Speed</span><b>"+(s.speed!=null?Number(s.speed).toFixed(1)+" km/h":"—")+"</b></div><div class=\"info-row\"><span>Last station</span><b>"+escapeHtml(s.last_station||"—")+"</b></div><div class=\"info-row\"><span>Next station</span><b>"+escapeHtml(s.next_station||"—")+"</b></div><div class=\"info-row\"><span>Delay</span><b>"+escapeHtml(String(s.delay_minutes??"—"))+" min</b></div><div class=\"info-row\"><span>Schedule rows</span><b>"+sch.length+"</b></div></div><span class=\"badge\">SIMULATED TRIAL DATA · NOT OFFICIAL LIVE TELEMETRY</span>";
+  }catch(e){panel.innerHTML="<h3>Train status</h3><p class=\"muted\">"+escapeHtml(e.message)+"</p>";}
+}
+document.getElementById("trainSearchBtn")?.addEventListener("click",searchPrakasamTrain);
+document.getElementById("trainSearch")?.addEventListener("keydown",e=>{if(e.key==="Enter")searchPrakasamTrain();});
+document.getElementById("routeBtn")?.addEventListener("click",()=>setTimeout(refreshPrakasamRailRun,1200));
+document.getElementById("findBtn")?.addEventListener("click",()=>setTimeout(refreshPrakasamRailRun,1200));
+document.getElementById("openMapBtn")?.addEventListener("click",()=>setTimeout(refreshPrakasamRailRun,1800));
+window.addEventListener("load",()=>{setTimeout(refreshRailcueJourneyBackend,1000);setTimeout(refreshLivePrakasamTrains,1200);setInterval(()=>{refreshLivePrakasamTrains();refreshPrakasamRailRun();},30000);});
+</script>
 async function railcueApi(path,options={}){const base=String(window.RAILCUE_API_BASE||"").replace(/\/$/,"");const r=await fetch(base+path,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error?.message||"Backend request failed");return d;}
 async function refreshRailcueJourneyBackend(){if(!window.userPosition||!window.destination)return;try{const p={start:{latitude:userPosition[1],longitude:userPosition[0]},destination:{latitude:destination[1],longitude:destination[0]}};const d=(await railcueApi("/api/journey/overview",{method:"POST",body:JSON.stringify(p)})).data||{};const x=d.crossings||[],s=d.stations||[];const a=document.getElementById("journeyGate1Text"),b=document.getElementById("journeyGate2Text"),c=document.getElementById("journeyStationText");if(a)a.textContent=x[0]?(x[0].name||"Railway Gate")+" · "+(Number(x[0].distance||0)/1000).toFixed(2)+" km · mapped":"No verified crossing found";if(b)b.textContent=x[1]?(x[1].name||"Railway Gate")+" · "+(Number(x[1].distance||0)/1000).toFixed(2)+" km · mapped":"No second verified crossing found";if(c)c.textContent=s[0]?s[0].name+" · mapped railway station":"No verified station found";}catch(e){console.warn("RAILCUE backend unavailable:",e.message);}}
 window.addEventListener("load",()=>setTimeout(refreshRailcueJourneyBackend,500));
