@@ -8,7 +8,7 @@ export async function nearbyCrossings(latitude,longitude,radius){
  return r.rows.map(x=>({...x,category:"railway_gate",railway_symbol:true,status:"unknown",live_status_available:false,confidence:"high",data_state:"MAPPED"}));
 }
 export async function crossingsNearRoute(geojson,bufferMeters=150){
- const r=await query(`with route as (select ST_SetSRID(ST_GeomFromGeoJSON($1),4326)::geography as g) select g.id,g.name,g.gate_number,g.source,g.source_id,ST_Y(g.geom::geometry) latitude,ST_X(g.geom::geometry) longitude,ST_Distance(g.geom,route.g) distance_to_route,ST_LineLocatePoint(ST_Transform(ST_GeomFromGeoJSON($1),4326),ST_Transform(g.geom::geometry,4326)) route_position from railway_gates g,cross join route where g.verified=true and ST_DWithin(g.geom,route.g,$2) order by route_position`,[JSON.stringify(geojson),bufferMeters]);
+ const r=await query(`with route as (select ST_SetSRID(ST_GeomFromGeoJSON($1),4326)::geography as g) select g.id,g.name,g.gate_number,g.source,g.source_id,ST_Y(g.geom::geometry) latitude,ST_X(g.geom::geometry) longitude,ST_Distance(g.geom,route.g) distance_to_route,ST_LineLocatePoint(ST_Transform(ST_GeomFromGeoJSON($1),4326),ST_Transform(g.geom::geometry,4326)) route_position from railway_gates g cross join route where g.verified=true and ST_DWithin(g.geom,route.g,$2) order by route_position`,[JSON.stringify(geojson),bufferMeters]);
  return r.rows.map(x=>({...x,category:"railway_gate",railway_symbol:true,status:"unknown",live_status_available:false,data_state:"MAPPED"}));
 }
 export async function importOsmAround(latitude,longitude,radius,overpassUrl){
