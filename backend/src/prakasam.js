@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 
-const dbPath=process.env.PRAKASAM_DB_PATH||path.resolve(process.cwd(),"data/railway_prakasam.db");
+const dbPath=process.env.PRAKASAM_DB_PATH||path.resolve(process.cwd(),"railway_prakasam.db");
 let db=null;
 function getDb(){
   if(!fs.existsSync(dbPath)) return null;
